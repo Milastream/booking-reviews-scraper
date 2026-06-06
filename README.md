@@ -1,166 +1,149 @@
-[Booking Reviews Scraper](https://apify.com/huggable_quote/booking-reviews-scraper?fpr=data)
+[Booking Reviews Scraper](https://apify.com/sovereigntaylor/booking-reviews-scraper?fpr=data)
 
-Extract guest reviews from Booking.com hotel pages at scale. This Apify Actor uses Booking.com's internal GraphQL API to retrieve structured review data — including reviewer info, scores, positive/negative text, room type, and stay details — without browser rendering. It supports multi-language filtering, score-based filtering, and can extract up to 1,000 reviews per hotel.
+# Booking.com Reviews Scraper
 
-## Why Use It
+Extract hotel reviews from Booking.com with full depth. Get positive and negative comments, reviewer details, scores, room types, stay duration, traveler types, and complete hotel metadata.
 
-- **GraphQL-based extraction**: Fetches reviews via Booking.com's internal API instead of parsing HTML, returning structured JSON with 25 reviews per request. Falls back to HTML parsing automatically if the API structure changes.
-- **Multi-language support**: Filter reviews by 12 languages (English, Japanese, Korean, Chinese, Spanish, French, German, Italian, Portuguese, Russian) or retrieve all languages at once.
-- **Score filtering**: Extract only reviews within a specific score range (0–10 scale), useful for sentiment analysis or quality monitoring.
-- **Anti-bot handling**: Uses Apify Residential Proxies by default, rotates User-Agent headers, and applies random delays between requests. Includes exponential backoff on rate-limited responses.
+## What data does it extract?
 
-## How To Use
+### Per review
 
-### 1. Create a new task
+- **Review text** -- both positive ("Liked") and negative ("Disliked") sections
+- **Review title** -- the headline summary written by the guest
+- **Overall score** -- numeric score (1-10 scale)
+- **Review date** -- when the review was written
+- **Stay date** -- month and year of the actual stay
+- **Reviewer name** and **country** of origin
+- **Room type** -- the specific room booked (e.g., "Deluxe King Room")
+- **Nights stayed** -- duration of the stay
+- **Traveler type** -- solo, couple, family, or group
+- **Review language** -- original language of the review
 
-Go to the [Booking.com Reviews Scraper](https://apify.com/huggable_quote/booking-reviews-scraper) page on Apify and click **Try for free**.
+### Per hotel
 
-### 2. Configure input
+- **Hotel name**, **address**, **city**, **country**
+- **Star rating** (1-5)
+- **Overall score** and **total review count**
+- **Category scores** -- Staff, Facilities, Cleanliness, Comfort, Value for Money, Location, Free WiFi
+- **Facilities list** -- parking, pool, spa, restaurant, etc.
+- **Photo URLs** -- hotel and room images
+- **Description** -- full hotel description text
+- **Check-in/Check-out** times
+- **Property type** -- hotel, apartment, hostel, etc.
 
-Add one or more Booking.com hotel URLs. Each URL should point to a hotel detail page:
+## Use cases
 
-```
-https://www.booking.com/hotel/jp/the-okura-tokyo.html
-https://www.booking.com/hotel/us/paramount-new-york.html
-```
+- **Hospitality research** -- analyze guest sentiment across hotels, chains, or destinations
+- **Hotel benchmarking** -- compare review scores and category ratings between competing properties
+- **Travel analytics** -- track seasonal patterns, identify trending destinations, measure satisfaction trends
+- **Reputation management** -- monitor what guests say about your property vs. competitors
+- **Investment due diligence** -- evaluate hotel performance through guest satisfaction data before acquisition
+- **Content marketing** -- generate data-driven travel guides and destination comparisons
+- **Service improvement** -- identify the most common complaints and praised features across properties
 
-### 3. Set options
+## Input examples
 
-Choose the maximum number of reviews per hotel, language filter, sort order, and score range.
-
-### 4. Run and download
-
-Click **Start** and wait for the run to complete. Download results as JSON, CSV, or Excel from the Dataset tab.
-
-## Input Configuration
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `startUrls` | array | *(required)* | List of Booking.com hotel page URLs. Min 1, max 100. |
-| `maxReviewsPerHotel` | integer | `100` | Maximum reviews to extract per hotel (1–1,000). |
-| `language` | string | `"all"` | Filter by review language. Options: `all`, `en`, `ja`, `ko`, `zh-cn`, `zh-tw`, `es`, `fr`, `de`, `it`, `pt`, `ru`. |
-| `sortBy` | string | `"newest"` | Sort order. Options: `newest`, `oldest`, `highest_score`, `lowest_score`, `most_relevant`. |
-| `minReviewScore` | number | `0` | Minimum review score (0–10). |
-| `maxReviewScore` | number | `10` | Maximum review score (0–10). |
-| `includeReviewerInfo` | boolean | `true` | Include reviewer name, country, room type, and traveler type. Set to `false` to exclude personal data. |
-| `proxyConfiguration` | object | Residential | Proxy settings. Residential proxies are recommended — Booking.com blocks most datacenter IPs. |
-
-### Example Input
+### Scrape reviews from specific hotels
 
 ```
 {
-  "startUrls": [
-    { "url": "https://www.booking.com/hotel/jp/the-okura-tokyo.html" },
-    { "url": "https://www.booking.com/hotel/us/paramount-new-york.html" }
+  "hotelUrls": [
+    "https://www.booking.com/hotel/us/the-plaza-new-york.html",
+    "https://www.booking.com/hotel/gb/the-savoy.html"
   ],
-  "maxReviewsPerHotel": 200,
-  "language": "en",
-  "sortBy": "newest",
-  "minReviewScore": 7,
-  "maxReviewScore": 10,
-  "includeReviewerInfo": true,
-  "proxyConfiguration": {
-    "useApifyProxy": true,
-    "apifyProxyGroups": ["RESIDENTIAL"]
-  }
+  "maxReviews": 500,
+  "sortBy": "recent",
+  "language": "en"
 }
 ```
 
-## Output Format
-
-Each review is stored as a separate record in the dataset:
+### Search a destination and scrape top hotels
 
 ```
 {
-  "hotelUrl": "https://www.booking.com/hotel/jp/the-okura-tokyo.html",
-  "hotelName": "The Okura Tokyo",
-  "hotelLocation": "Tokyo, Japan",
-  "reviewId": "abc123def456",
-  "reviewerName": "John D.",
-  "reviewerCountry": "United States",
-  "reviewerCountryCode": "us",
-  "reviewDate": "2026-03-15",
-  "stayDate": "2026-02",
-  "roomType": "Deluxe Twin Room",
-  "lengthOfStay": 3,
-  "travelerType": "Couple",
-  "reviewScore": 9.0,
-  "reviewTitle": "Excellent stay",
-  "positiveText": "Great location and service",
-  "negativeText": "Wifi was a bit slow",
-  "language": "en",
-  "isVerifiedStay": true,
-  "scrapedAt": "2026-04-16T10:00:00Z"
+  "searchQuery": "Paris",
+  "maxHotelsFromSearch": 20,
+  "maxReviews": 200,
+  "sortBy": "recent",
+  "guestType": "couple"
 }
 ```
 
-### Output Fields
+### Get only negative reviews for competitor analysis
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `hotelUrl` | string | Original hotel page URL |
-| `hotelName` | string | Hotel name as displayed on Booking.com |
-| `hotelLocation` | string | Hotel city and country |
-| `reviewId` | string | Booking.com internal review identifier |
-| `reviewerName` | string | Reviewer display name (empty if `includeReviewerInfo` is false) |
-| `reviewerCountry` | string | Reviewer's country name |
-| `reviewerCountryCode` | string | ISO 3166-1 alpha-2 country code (lowercase) |
-| `reviewDate` | string | Review submission date (YYYY-MM-DD) |
-| `stayDate` | string | Month of stay (YYYY-MM) |
-| `roomType` | string | Room type the reviewer stayed in |
-| `lengthOfStay` | integer | Number of nights |
-| `travelerType` | string | Traveler category (e.g., Couple, Family, Solo traveler) |
-| `reviewScore` | number | Review score on a 0–10 scale |
-| `reviewTitle` | string | Review headline |
-| `positiveText` | string | Positive review comments |
-| `negativeText` | string | Negative review comments |
-| `language` | string | Review language code |
-| `isVerifiedStay` | boolean | Whether the reviewer's stay was verified by Booking.com |
-| `scrapedAt` | string | Timestamp when the review was extracted (ISO 8601 UTC) |
+```
+{
+  "hotelUrls": ["https://www.booking.com/hotel/fr/ritz-paris.html"],
+  "maxReviews": 1000,
+  "sortBy": "lowest",
+  "language": "all"
+}
+```
 
-## Use Cases
+### Filter by guest type for family travel research
 
-- **Hotel operators**: Monitor guest feedback across properties, identify recurring complaints, and track satisfaction trends over time.
-- **Travel metasearch platforms**: Aggregate review data from Booking.com alongside other OTAs for comparison features.
-- **Sentiment analysis**: Feed review text into NLP pipelines to extract sentiment scores, topic clusters, or staff performance insights.
-- **Market research**: Analyze competitor hotels' guest satisfaction, pricing perception, and seasonal review patterns.
-- **Academic research**: Study traveler behavior, cross-cultural review differences, or hospitality service quality at scale.
+```
+{
+  "hotelUrls": ["https://www.booking.com/hotel/us/disney-contemporary-resort.html"],
+  "maxReviews": 500,
+  "guestType": "family",
+  "sortBy": "recent"
+}
+```
+
+## Output example
+
+```
+{
+  "hotelName": "The Plaza",
+  "hotelUrl": "https://www.booking.com/hotel/us/the-plaza-new-york.html",
+  "hotelStarRating": 5,
+  "hotelOverallScore": 8.9,
+  "hotelTotalReviews": 4521,
+  "reviewerName": "Sarah",
+  "reviewerCountry": "United Kingdom",
+  "overallScore": 9.2,
+  "reviewTitle": "Unforgettable luxury experience",
+  "positiveText": "The rooms are stunning, staff was incredibly attentive, and the location on Central Park is unbeatable. Afternoon tea in the Palm Court was magical.",
+  "negativeText": "The valet parking fee was quite steep at $75/night.",
+  "reviewDate": "2025-12-15",
+  "stayDate": "November 2025",
+  "roomType": "Deluxe King Room with Park View",
+  "nightsStayed": 3,
+  "travelerType": "Couple",
+  "reviewLanguage": "en",
+  "scrapedAt": "2026-03-02T12:00:00.000Z"
+}
+```
 
 ## Pricing
 
-This Actor uses the **pay-per-event** pricing model. You are only charged for the reviews actually extracted.
+This actor uses pay-per-event pricing. You are charged $0.004 per review extracted. Hotel metadata is included at no extra cost.
 
-| Event | Price per unit | Example |
-| --- | --- | --- |
-| `review-extracted` | $0.0002 | 1,000 reviews = $0.20 |
+| Reviews | Cost |
+| --- | --- |
+| 100 | $0.40 |
+| 500 | $2.00 |
+| 1,000 | $4.00 |
+| 10,000 | $40.00 |
 
-You can set a **maximum spend per run** in the Apify Console to control costs. The Actor automatically stops extracting when your spending limit is reached and returns all reviews collected up to that point.
+## Tips for best results
 
-Residential proxy usage is billed separately by Apify based on data transfer. Typical usage: ~0.5 MB per 100 reviews.
+1. **Use proxies** -- Booking.com has anti-bot protections. Apify proxies are recommended.
+2. **Start with fewer reviews** -- test with `maxReviews: 50` before running large extractions.
+3. **Language filter** -- set `language: "all"` if you want reviews in every language, or specify a language code for targeted results.
+4. **Sort by recent** -- gives you the freshest data for trend analysis.
+5. **Combine with hotel details** -- keep `includeHotelDetails: true` for complete property context.
 
-## Limitations & FAQ
+## Integrations
 
-**Q: How many reviews can I extract per hotel?**
-A: Up to 1,000 per run. Booking.com may have fewer reviews available for some properties.
+Connect this scraper to your workflow:
 
-**Q: Why do I need residential proxies?**
-A: Booking.com blocks most datacenter IP ranges. Residential proxies route requests through consumer IP addresses, which are not blocked. Without residential proxies, requests will likely return CAPTCHA pages or 403 errors.
+- **Google Sheets** -- export reviews directly to spreadsheets
+- **Webhooks** -- get notified when scraping completes
+- **API** -- integrate with your own applications
+- **Zapier / Make** -- automate review monitoring pipelines
 
-**Q: Can I scrape reviews without a Booking.com account?**
-A: Yes. This Actor does not require any Booking.com credentials. Reviews are publicly accessible.
+## Support
 
-**Q: How often does the GraphQL API structure change?**
-A: Booking.com updates their frontend periodically. This Actor includes automatic fallback to HTML parsing when the GraphQL structure changes, so it continues working across most updates. If both methods fail, an update to the Actor will be released.
-
-**Q: Are there rate limits?**
-A: The Actor includes built-in delays (1–3 seconds between requests) and exponential backoff on 429 responses. Up to 3 hotels are processed concurrently by default.
-
-**Q: What happens if a hotel URL is invalid?**
-A: Invalid URLs are skipped with a warning log. Other hotels in the same run continue processing normally.
-
-## Author & Contact
-
-**Author**: [huggable_quote](https://apify.com/huggable_quote)
-**License**: Apache-2.0
-
-For bug reports or feature requests, open an issue on the [GitHub repository](https://github.com/huggable_quote/booking-reviews-scraper) or contact via Apify.
+Built by Sovereign AI. For questions or feature requests, open an issue on GitHub or contact [ricardo.yudi@gmail.com](mailto:ricardo.yudi@gmail.com).
